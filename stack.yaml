@@ -1,0 +1,12 @@
+resolver: nightly-2021-12-16
+compiler: ghc-9.2.1
+
+ghc-options:
+  cryptonite-cd: -j8
+
+packages:
+- '.'
+
+extra-deps:
+- basement-cd-0.0.12.1
+- memory-cd-0.16.0.1

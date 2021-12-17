@@ -10,6 +10,7 @@
 --
 -- The array produced should never be exposed to the user directly.
 --
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE UnboxedTuples #-}
@@ -114,7 +115,7 @@ mutableArray32FromAddrBE (I# n) a = IO $ \s ->
         loop i st mb
             | booleanPrim (i ==# n) = (# st, MutableArray32 mb #)
             | otherwise             =
-                let !st' = writeWord32Array# mb i (be32Prim (indexWord32OffAddr# a i)) st
+                let !st' = writeWord32Array# mb i (wordToWord32Compat# (be32Prim (word32ToWordCompat# (indexWord32OffAddr# a i)))) st
                  in loop (i +# 1#) st' mb
 
 -- | freeze a Mutable Array of Word32 into a immutable Array of Word32
@@ -155,3 +156,17 @@ mutableArrayWriteXor32 :: MutableArray32 -> Int -> Word32 -> IO ()
 mutableArrayWriteXor32 m o w =
     mutableArrayRead32 m o >>= \wOld -> mutableArrayWrite32 m o (wOld `xor` w)
 {-# INLINE mutableArrayWriteXor32 #-}
+
+#if MIN_VERSION_base(4,16,0)
+word32ToWordCompat# :: Word32# -> Word#
+word32ToWordCompat# = word32ToWord#
+
+wordToWord32Compat# :: Word# -> Word32#
+wordToWord32Compat# = wordToWord32#
+#else
+word32ToWordCompat# :: Word# -> Word#
+word32ToWordCompat# x = x
+
+wordToWord32Compat# :: Word# -> Word#
+wordToWord32Compat# x = x
+#endif
